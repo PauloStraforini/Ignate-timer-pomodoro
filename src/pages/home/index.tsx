@@ -1,4 +1,7 @@
 import { Play } from 'lucide-react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import * as zod from 'zod'
 
 import {
     CountdownContainer,
@@ -10,13 +13,41 @@ import {
     TaskInput,
 } from './styles'
 
+const newCycleFormValidationSchema = zod.object({
+    task: zod.string().min(1, 'Informe a .'),
+    minutesAmount: zod.number().min(5, 'O periodo prescisa ser no mínimo 05 Min.').max(60, 'O periodo prescisa ser no máximo 60 Min.')
+})
+
 export function Home() {
+    const { register, handleSubmit, watch } = useForm({
+        resolver: zodResolver(newCycleFormValidationSchema)
+    })
+
+    function handleCreateNewCycle(data: any) {
+        console.log(data)
+    }
+
+    const task = watch('task')
+    const isSubmitDisable = !task
+
     return (
         <HomeContainer>
-            <form>
+            <form onSubmit={handleSubmit(handleCreateNewCycle)}>
                 <FormContainer>
                     <label htmlFor="task">Vou trabalhar em</label>
-                    <TaskInput id="task" placeholder="Dê um nome para o seu projeto" />
+                    <TaskInput
+                        id="task"
+                        list="task-suggestions"
+                        placeholder="Nome do seu projeto"
+                        {...register('task')}
+                    />
+
+                    <datalist id="task-suggestions">
+                        <option value="Projeto 1" />
+                        <option value="Projeto 2" />
+                        <option value="Projeto 3" />
+                        <option value="Banana" />
+                    </datalist>
 
                     <label htmlFor="minutesAmount">durante</label>
                     <MinutesAmountInput
@@ -26,6 +57,7 @@ export function Home() {
                         step={5}
                         min={5}
                         max={60}
+                        {...register('minutesAmount', { valueAsNumber: true })}
                     />
 
                     <span>minutos.</span>
@@ -39,7 +71,7 @@ export function Home() {
                     <span>0</span>
                 </CountdownContainer>
 
-                <StartCountdownButton disabled type="submit">
+                <StartCountdownButton disabled={isSubmitDisable} type="submit">
                     <Play size={24} />
                     Começar
                 </StartCountdownButton>
